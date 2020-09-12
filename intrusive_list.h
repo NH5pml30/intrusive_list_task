@@ -130,7 +130,7 @@ namespace intrusive
     }
     void pop_back() noexcept
     {
-      (--end())->unlink();
+      back().unlink();
     }
     T& back() noexcept
     {
@@ -147,7 +147,7 @@ namespace intrusive
     }
     void pop_front() noexcept
     {
-      begin()->unlink();
+      front().unlink();
     }
     T& front() noexcept
     {
