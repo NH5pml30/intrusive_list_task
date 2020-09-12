@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iterator>
 
 namespace intrusive
@@ -97,42 +99,38 @@ namespace intrusive
     list(list const&) = delete;
     list(list&& other) noexcept : list()
     {
-      head->next = other.head->next;
-      head->next->prev = &head_;
-      tail->prev = other.tail->prev;
-      tail->prev->next = &tail_;
-      other.clear();
+      splice(end(), other, other.begin(), other.end());
     }
     ~list() = default;
 
     list& operator=(list const&) = delete;
     list& operator=(list&& other) noexcept
     {
-      head->next = other.head->next;
-      head->next->prev = &head_;
-      tail->prev = other.tail->prev;
-      tail->prev->next = &tail_;
-      other.clear();
+      clear();
+      splice(end(), other, other.begin(), other.end());
       return *this;
     }
 
     void clear() noexcept
     {
+      auto at = head->next;
+      while (at != tail)
+      {
+        auto save = at->next;
+        at->prev = at->next = nullptr;
+        at = save;
+      }
       head->next = tail;
       tail->prev = head;
     }
 
     void push_back(T& el) noexcept
     {
-      el.list_element<Tag>::prev = tail->prev;
-      el.list_element<Tag>::next = tail;
-      tail->prev->next = &el;
-      tail->prev = &el;
+      insert(end(), el);
     }
     void pop_back() noexcept
     {
-      tail->prev->prev->next = tail;
-      tail->prev = tail->prev->prev;
+      (--end())->unlink();
     }
     T& back() noexcept
     {
@@ -145,14 +143,11 @@ namespace intrusive
 
     void push_front(T& el) noexcept
     {
-      el.list_element<Tag>::prev = head;
-      el.list_element<Tag>::next = head->next;
-      head->next->prev = &el;
-      head->next = &el;
+      insert(begin(), el);
     }
     void pop_front() noexcept
     {
-      erase(begin());
+      begin()->unlink();
     }
     T& front() noexcept
     {
